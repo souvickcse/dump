@@ -1,0 +1,104 @@
+#import <Foundation/Foundation.h>
+
+#import <SpinKit/RTSpinKitView.h>
+typedef void (^ CompletionBlock)(BOOL isCompleted, NSDictionary *userInfo);
+
+#import <PureLayout/PureLayout.h>
+
+#import <CocoaLumberjack/CocoaLumberjack.h>
+#ifdef DEBUG
+static const int ddLogLevel = DDLogLevelVerbose;
+#else
+static const int ddLogLevel = DDLogLevelWarning;
+#endif
+
+@interface CommonHelper : NSObject
+
+@end
+
+extern void setUpLumberJack();
+
+extern void showSpinner(UIView *parentView, int spinnerTag, float spinnerSize, int duration, RTSpinKitViewStyle spinnerStyle, UIColor *spinnerColor, UIColor *backgroundColor, CompletionBlock completionBlock);
+extern void hideSpinner(UIView *parentView, int spinnerTag);
+
+extern void changeRootViewController();
+
+-------------------------------------------------------------
+
+//
+//  Common.m
+//  ChatApp
+//
+//  Created by Souvick Ghosh on 24/03/16.
+//  Copyright © 2016 souvick. All rights reserved.
+//
+
+#import "CommonHelper.h"
+#import "CommonNavigationController.h"
+#import "HomeViewController.h"
+#import "AppDelegate.h"
+
+@implementation CommonHelper
+
+@end
+
+void setUpLumberJack() {
+    [DDLog addLogger:[DDTTYLogger sharedInstance]];
+    [DDLog addLogger:[DDASLLogger sharedInstance]];
+    //    DDFileLogger *fileLogger = [[DDFileLogger alloc] init];
+    //    fileLogger.rollingFrequency = 60 * 60 * 24;
+    //    fileLogger.logFileManager.maximumNumberOfLogFiles = 7;
+    //    [DDLog addLogger:fileLogger];
+    
+    //    [[DDTTYLogger sharedInstance] setColorsEnabled:YES];
+    //    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor greenColor] backgroundColor:nil forFlag:DDLogFlagVerbose];
+    
+}
+
+void showSpinner(UIView *parentView, int spinnerTag, float spinnerSize, int duration, RTSpinKitViewStyle spinnerStyle, UIColor *spinnerColor, UIColor *backgroundColor, CompletionBlock completionBlock) {
+    RTSpinKitView *spinner = [[RTSpinKitView alloc] initWithStyle:spinnerStyle];
+    spinner.tag = spinnerTag;
+    
+    if(spinnerColor)
+        spinner.color = spinnerColor;
+    if(backgroundColor)
+        spinner.backgroundColor = backgroundColor;
+    
+    [[parentView viewWithTag:spinnerTag] removeFromSuperview];
+    
+    if(spinnerSize>0.0) {
+        spinner.spinnerSize = 100.0;
+        [spinner sizeToFit];
+    }
+    
+    [parentView addSubview:spinner];
+    [spinner startAnimating];
+    if(duration>0.0) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, duration * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            [spinner removeFromSuperview];
+            completionBlock(YES, nil);
+        });
+    } else {
+        completionBlock(YES, nil);
+    }
+    
+    [spinner setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [spinner autoAlignAxis:ALAxisHorizontal toSameAxisOfView:parentView];
+    [spinner autoAlignAxis:ALAxisVertical toSameAxisOfView:parentView];
+    
+}
+
+void hideSpinner(UIView *parentView, int spinnerTag) {
+    [[parentView viewWithTag:spinnerTag] removeFromSuperview];
+}
+
+void changeRootViewController() {
+    UIStoryboard *storyboard                            = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    CommonNavigationController *rootNavbarController    = [storyboard instantiateViewControllerWithIdentifier:@"CommonNavigationController"];
+    HomeViewController *homeViewController              = [storyboard instantiateViewControllerWithIdentifier:@"HomeViewController"];
+    [rootNavbarController setViewControllers:@[homeViewController]];
+    [[AppDelegate delegate].window setRootViewController:homeViewController];
+    [[AppDelegate delegate].window makeKeyAndVisible];
+}
+
+-------------------------------------------------------------
