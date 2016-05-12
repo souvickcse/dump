@@ -104,3 +104,12 @@ void changeRootViewController() {
 -------------------------------------------------------------
 
 [[NSString alloc] initWithData:error.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey] encoding:NSUTF8StringEncoding]
+
+
+
+
+https://developer.apple.com/library/mac/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/ManagingFIlesandDirectories/ManagingFIlesandDirectories.html
+
+
+
+https://developer.apple.com/library/ios/documentation/General/Conceptual/ExtensibilityPG/Finder.html
