@@ -1,3 +1,11 @@
+pod setup
+Ctrl +C
+pod repo remove master
+cd ~/.cocoapods/repos 
+git clone --depth 1 https://github.com/CocoaPods/Specs.git master
+
+
+
 #import <Foundation/Foundation.h>
 
 #import <SpinKit/RTSpinKitView.h>
