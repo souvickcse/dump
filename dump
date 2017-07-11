@@ -121,3 +121,149 @@ https://developer.apple.com/library/mac/documentation/FileManagement/Conceptual/
 
 
 https://developer.apple.com/library/ios/documentation/General/Conceptual/ExtensibilityPG/Finder.html
+
+//
+//  ViewController.m
+//  WebRtcExample
+//
+//  Created by souvick on 11/07/17.
+//  Copyright © 2017 souvick. All rights reserved.
+//
+
+#import "ViewController.h"
+@import WebRTC;
+
+
+
+@interface ViewController ()
+@property (nonatomic) RTCPeerConnectionFactory *factory;
+@property (nonatomic) RTCPeerConnection *peerConnection;
+@property (strong, nonatomic) RTCMediaConstraints* constraints;
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+    //NSString *device = [UIDevice stringForDeviceType:[UIDevice deviceType]];
+    
+    //NSLog(@"%@", device);
+    NSLog(@"%d", RTCInitializeSSL());
+    _factory = [[RTCPeerConnectionFactory alloc] init];
+    [self initRTCPeerConnection];
+    
+}
+
+- (void)initRTCPeerConnection
+{
+    NSArray<RTCIceServer *> *iceServers = [NSArray arrayWithObjects:[[RTCIceServer alloc] initWithURLStrings:[NSArray arrayWithObjects:@"stun:stun.services.mozilla.com", nil]], [[RTCIceServer alloc] initWithURLStrings:[NSArray arrayWithObjects:@"stun:stun.l.google.com:19302", nil]] , nil];
+    
+    RTCConfiguration *config = [[RTCConfiguration alloc] init];
+    [config setIceServers:iceServers];
+    
+    NSDictionary *mandatoryConstraints = @{
+                                           @"OfferToReceiveAudio" : @"true",
+                                           @"OfferToReceiveVideo" : @"true",
+                                           };
+    _constraints = [[RTCMediaConstraints alloc] initWithMandatoryConstraints:mandatoryConstraints optionalConstraints:nil];
+    _peerConnection = [_factory peerConnectionWithConfiguration:config constraints:_constraints delegate:(id)self];
+    
+    
+    
+
+    RTCMediaStream *localStream = [_factory mediaStreamWithStreamId:@"someUniqueStreamLabel"];
+    RTCAudioTrack *audioTrack = [_factory audioTrackWithTrackId:@"audio0"];
+    [localStream addAudioTrack:audioTrack];
+    [_peerConnection addStream:localStream];
+    
+    
+
+    [_peerConnection offerForConstraints:_constraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
+        NSLog(@"SDP: %@//%@",sdp,error);
+        [_peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable errorLocal) {
+            
+            NSLog(@"Local Error: %@",errorLocal);
+        }];
+        
+        RTCSessionDescription *remoteDesc = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdp.sdp];
+        [_peerConnection setRemoteDescription:remoteDesc completionHandler:^(NSError * _Nullable errorRemote) {
+            NSLog(@"Remote Error:%@",errorRemote);
+            
+        }];
+    }];
+    
+    
+    
+
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/** Called when the SignalingState changed. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+didChangeSignalingState:(RTCSignalingState)stateChanged; {
+    if (peerConnection.signalingState == RTCSignalingStateHaveLocalOffer) {
+        // Send offer/answer through the signaling channel of our application
+    } else if (peerConnection.signalingState == RTCSignalingStateHaveRemoteOffer) {
+        // If we have a remote offer we should add it to the peer connection
+        [_peerConnection answerForConstraints:_constraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
+            
+            
+        }];
+    }
+}
+
+/** Called when media is received on a new stream from remote peer. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+          didAddStream:(RTCMediaStream *)stream; {
+    
+}
+
+/** Called when a remote peer closes a stream. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+       didRemoveStream:(RTCMediaStream *)stream; {
+    
+}
+
+/** Called when negotiation is needed, for example ICE has restarted. */
+- (void)peerConnectionShouldNegotiate:(RTCPeerConnection *)peerConnection; {
+    
+}
+
+/** Called any time the IceConnectionState changes. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+didChangeIceConnectionState:(RTCIceConnectionState)newState; {
+    
+}
+
+/** Called any time the IceGatheringState changes. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+didChangeIceGatheringState:(RTCIceGatheringState)newState; {
+    
+}
+
+/** New ice candidate has been found. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+didGenerateIceCandidate:(RTCIceCandidate *)candidate; {
+    [_peerConnection addIceCandidate:candidate];
+}
+
+/** Called when a group of local Ice candidates have been removed. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates; {
+    [_peerConnection removeIceCandidates:candidates];
+    
+}
+
+/** New data channel has been opened. */
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+    didOpenDataChannel:(RTCDataChannel *)dataChannel; {
+    
+}
+
+@end
+
