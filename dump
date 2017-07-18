@@ -267,3 +267,48 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates; {
 
 @end
 
+
+- (void)addCircularButtons {
+    float currentX = 0.0;
+    float currentY = 0.0;
+    float maxY = 0.0;
+
+    for(int i=0;i<100;i++) {
+        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+        [button setBackgroundColor:[UIColor colorWithHue:drand48() saturation:1.0 brightness:1.0 alpha:1.0]];
+        
+        float originX = currentX + [self generateRandomNumberWithlowerBound:10 upperBound:40];
+        float originY = currentY + [self generateRandomNumberWithlowerBound:10 upperBound:40];
+        float width = [self generateRandomNumberWithlowerBound:MINLENGTH upperBound:MAXLENGTH];
+        float height = width;
+        
+        if(originX+width>self.scrollView.frame.size.width) {
+            /*Add New Line*/
+            currentY = maxY;
+            currentX = 0.0;
+            originY = currentY + [self generateRandomNumberWithlowerBound:0 upperBound:20];
+            originX = currentX + [self generateRandomNumberWithlowerBound:10 upperBound:40];
+            
+        }
+        
+        if(originY+height>maxY) {
+            maxY = originY+height;
+        }
+        
+        currentX = originX+width;
+        NSLog(@"%f--%F--%F",currentX,originX,width);
+        button.frame = CGRectMake(originX, originY, width, height);
+        button.layer.cornerRadius = (float)width/2.0;
+        button.layer.masksToBounds = YES;
+        [self.scrollView addSubview:button];
+    }
+}
+
+-(int) generateRandomNumberWithlowerBound:(int)lowerBound
+                               upperBound:(int)upperBound
+{
+    int rndValue = lowerBound + arc4random() % (upperBound - lowerBound);
+    return rndValue;
+}
+
+
